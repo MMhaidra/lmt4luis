@@ -1,0 +1,61 @@
+This is the README file for "List Mode Tomography from Muon Shadows"
+
+Version: LMT4LUIS 1.0.
+
+LMT4LUIS implements a procedure for estimating the difference between
+a nominal density profile and an unknown target density profile. The
+procedure uses detected cosmic ray muons that have passed through the
+unknown density as its source of information.  It uses background runs
+to characterize relevant features of the incident flux, detector
+efficiency and the nominal profile simultaneously.
+
+=========================== List of files ==============================
+
+README               This file
+
+guide.tex            LaTeX source for description of software and data
+
+Makefile             Build instructions for gnu make program
+
+geometryLM.py        Basic algorithms
+
+GUILM.py             Graphical user interface for geometryLM.py.  Uses Tkinter
+
+amf.c                Key operations coded in C for speed
+
+setup.py             Instructions for compiling amf.c and making
+                     library accessible from Python
+
+tmp/AG_rotated.mat   **MISSING**
+
+LMTMT.tex            LaTeX source for paper published in SIIMS
+
+=========================== Installation and Use ============================
+
+Given a distribution file named 'lmt4luis.tar.bz2', issue the
+following sequence of commands.  (prompt assumed to be '>')
+
+>tar -xjf lmt4luis.tar.bz2
+>python setup.py
+>ln -s build/lib.linux-x86_64-2.6/amf.so amf.so
+>python GUILM.py
+
+The four commands above will start a GUI for simulating muonic
+examination of a sphere.  You may need to modify the 'ln' command if
+your system is not lib.linux-x86_64-2.6.
+
+>python GULM.py data
+
+The above command will start a GUI for analyzing the experimental data
+in tmp/AG_rotated.mat
+
+>make LMTMT.pdf
+>make guide.pdf
+
+The above commands will build the two documents.  Building LMTMT.pdf
+requires several hours on a PC with 8GB of RAM, and is not possible
+with less RAM.
+
+# Local Variables:
+# mode: text
+# End:

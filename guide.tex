@@ -1,0 +1,89 @@
+%\documentclass[]{article}
+\documentclass[twocolumn]{article}
+\usepackage{amsmath,amsfonts}
+%\usepackage{showlabels}
+\usepackage[pdftex]{rotating,color}
+%\usepackage[pdftex]{graphicx,color} 
+\newcommand{\normal}[2]{{\cal N}(#1,#2)}
+\newcommand{\NormalE}[3]{{\mathcal{N}}\left.\left(#1,#2\right)\right|_{#3}}
+\renewcommand{\th}{^{\text{th}}}
+\newcommand{\Radon}{{\cal R}}
+\newcommand{\field}[1]{\mathbb{#1}}
+\newcommand{\EV}[2]{\field{E}_{#1}\left[#2\right]}
+\newcommand{\argmin}{\operatorname*{argmin}}
+\newcommand{\argmax}{\operatorname*{argmax}}
+\newcommand{\arrowmap}{\operatorname*{\rightarrow}}
+\newcommand{\av}{\mathbf{v}}%
+\newcommand{\bv}{\mathbf{w}}%
+\newcommand{\Rv}{\mathbf{R}}%
+\newcommand{\power}{p}
+\newcommand{\like}{g}
+\newcommand{\loglike}{L}
+\newcommand{\logAP}{{\cal L}}
+\newcommand{\z}{z}% The integrated rate, like a partition function
+\newcommand{\area}{A} %The area or volume of a detector bin
+\title{Supplementary Guide for LMT4LUIS\footnote{LA-CC-09-094}}
+
+\author{Andy Fraser}
+\begin{document}
+\maketitle
+\begin{abstract}
+  Here I provide a guide to material that supplements the article
+  \emph{List Mode Tomography from Muon Shadows}.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+For now, I include the same figures that appear in LMTMT.  Later, I
+will use different figures and different text.
+
+\begin{figure*}
+  \centering 
+  \resizebox{0.32\textwidth}{!}{\input TestVA1M.pdf_t } 
+  \resizebox{0.32\textwidth}{!}{\input TestVB1M.pdf_t }
+  \resizebox{0.32\textwidth}{!}{\input SimVB.pdf_t }  
+  \caption{Reconstruction of a density profile from simulated muon shadows.}
+  \label{fig:sim1}
+\end{figure*}
+
+\begin{figure}
+  \centering
+  \includegraphics[angle=-90,width=0.4\textwidth]{LUISbricks_5.jpg}
+  \resizebox{0.48\textwidth}{!}{\input JAGbrick.pdf_t }  
+  \caption{Density profile reconstructed from measured muon shadows.}
+  \label{fig:exp1}
+\end{figure}
+
+In the paper, I wrote the regularization as
+\begin{equation*}
+  T(\av) = \alpha \sqrt{\av^T D \av + \beta}.
+\end{equation*}
+In the code, I use
+\begin{equation*}
+  T(\av) = \alpha \sqrt{n\av^T D \av + \beta^2},
+\end{equation*}
+where $n$ is the dimension of $\av$.  I use $n\av^T D \av$ because as
+$n\rightarrow \infty$ that form converges.  With the second form, the
+regularization is approximately independent of $n$ and
+$\frac{T}{\alpha\beta}$ indicates how close the regularization is to
+the absolute value $\alpha\left|n\av^T D \av\right|$.
+
+\section{To Do}
+\label{sec:todo}
+
+\begin{enumerate}
+\item Describe binning of experimental data
+\item Talk about code
+\item List prerequisites
+\item List key routines
+\item Talk about Tkinter
+\item Put the disk caching stuff here
+\end{enumerate}
+
+\end{document}
+
+
+%%% Local Variables:
+%%% eval: (TeX-PDF-mode)
+%%% End:

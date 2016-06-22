@@ -1,0 +1,642 @@
+%\documentclass[]{article}
+\documentclass[twocolumn]{article}
+\usepackage{amsmath,amsfonts}
+%\usepackage{showlabels}
+\usepackage[pdftex]{rotating,color}
+%\usepackage[pdftex]{graphicx,color} 
+\newcommand{\normal}[2]{{\cal N}(#1,#2)}
+\newcommand{\NormalE}[3]{{\mathcal{N}}\left.\left(#1,#2\right)\right|_{#3}}
+\renewcommand{\th}{^{\text{th}}}
+\newcommand{\Radon}{{\cal R}}
+\newcommand{\field}[1]{\mathbb{#1}}
+\newcommand{\EV}[2]{\field{E}_{#1}\left[#2\right]}
+\newcommand{\argmin}{\operatorname*{argmin}}
+\newcommand{\argmax}{\operatorname*{argmax}}
+\newcommand{\arrowmap}{\operatorname*{\rightarrow}}
+\newcommand{\av}{\mathbf{v}}%
+\newcommand{\bv}{\mathbf{w}}%
+\newcommand{\Rv}{\mathbf{R}}%
+\newcommand{\power}{p}
+\newcommand{\like}{g}
+\newcommand{\loglike}{L}
+\newcommand{\logAP}{{\cal L}}
+\newcommand{\z}{z}% The integrated rate, like a partition function
+\newcommand{\area}{A} %The area or volume of a detector bin
+\title{List Mode Tomography from Muon Shadows}
+
+\author{Andy Fraser}
+\begin{document}
+\maketitle
+\begin{abstract}
+  We describe a procedure for estimating the difference between a
+  nominal density profile and an unknown target density profile. The
+  procedure uses detected cosmic ray muons that have passed through
+  the unknown density as its source of information.  It uses
+  background runs to characterize relevant features of the incident
+  flux, detector efficiency and the nominal profile simultaneously.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+In a classic study\cite{Alvarez70} Luis Alvarez et al.\ used
+measurements of cosmic ray muons to search for hidden chambers in
+Chephren's pyramid at Giza.  The study estimated the dependence of
+muon flux on \emph{two} angular dimensions by counting the number of
+detections in each $3\times 3$ degree bin in a square that was 90
+degrees on each side.  On the basis of the estimated flux distribution
+the study concluded that no hidden chambers exist.  We have built a
+detector named \emph{LUIS}\cite{Green10} that characterizes each
+measured muon in terms of \emph{four} parameters (two position
+dimensions and two angular dimensions) that allows us to estimate
+\emph{three} dimensional density profiles.  We describe the
+tomographic algorithm for computing such estimates below.
+
+The basis of list mode tomography is the following formula for the
+unnormalized\footnote{Given a rate field $R$ with integral $z$, the
+  discrete probability of the number of hits being the integer $M$ in
+  a time interval $t$ is
+  \begin{equation*}
+    P(M|R,t) = \frac{e^{-zt} (zt)^M}{M!},
+  \end{equation*}
+  and given that value of $M$, the probability density for the hits
+  falling at the locations $\gamma_1^M$ is
+  \begin{equation*}
+    f(\gamma_1^M|R,M) = z^{-M} \prod_{k=1}^M R(\gamma_k).
+  \end{equation*}
+  The product yields
+  \begin{equation*}
+    P(M,\gamma_1^M|R,t) = \frac{e^{-\z t}}{M!} \prod_{k=1}^M  R(\gamma_k),
+  \end{equation*}
+  the joint conditional probability mass and density function for
+  $M$ hits with values $\gamma_1^M$.} likelihood of $M$ \emph{hits}
+with values $\gamma_1^M$, drawn from an inhomogeneous Poisson process
+\begin{equation}
+  \label{eq:ihPoisson}
+  \like(\gamma_1^M|R,t) = e^{-\z t} \prod_{k=1}^M  R(\gamma_k).
+\end{equation}
+I've used the following notation in Eqn.~\ref{eq:ihPoisson}
+\begin{description}
+\item[$\like$] The likelihood function
+\item[$\gamma_k$] The coordinates of the $k^{\text{th}}$ measured
+  hit.  For the application in this paper, $\gamma_k$ describes the
+  trajectory of a detected muon.
+\item[$\gamma_1^M=(\gamma_1,\gamma_2,\ldots,\gamma_M)$] The collection
+  of all of the measured hits
+\item[$R$] The field of detection rates
+\item[$t$] The length of the time interval over which the data was
+  taken
+\item[$\z$] The integral of the rate field
+\end{description}
+
+If the detected trajectories are unique, then a rate field that is
+zero everywhere except over volumes of size $\epsilon$ centered at the
+points $\gamma_1^M$ where $R(\gamma)=\frac{1}{M\epsilon}$ has a
+likelihood that is unbounded as $\epsilon \rightarrow 0$.  To avoid
+such singularities, we will impose a prior on the rate fields.
+
+For the task at hand, $R$ depends on a combination of the distribution
+of incident muons at the earth's surface, the density of material
+above the detector and the detector efficiency for each possible
+trajectory $\gamma$.  We schematically summarize my forward model of
+how the rate field $R$ depends on the density field $\rho$ by
+\begin{equation}
+  \label{eq:schematic}
+  \rho(\xi) \arrowmap_{\Radon} u(\gamma)
+  \arrowmap_{\Phi} R(\gamma),
+\end{equation}
+where the linear Radon transform $\Radon$ maps from the density field
+in ordinary three dimensional space $\xi$ to a field $u$ in the four
+dimensional space of possible trajectories $\gamma$, and the nonlinear
+(but local in $\gamma$) function $\Phi$ depends on the energy
+distribution of the incident muon flux.
+
+We use a vector of parameters denoted by $\av$ to approximate the
+density profile $\rho$ with a finite number of dimensions.  Using
+$\av$ in place of $\rho$ in Eqn.~\ref{eq:schematic}, we write the log
+likelihood as
+\begin{equation*}
+  \loglike(\gamma_1^M,\av) = -tz + \sum_{k=1}^M \log(R(\gamma_k|\av),
+\end{equation*}
+where $R(\gamma|\av)$ is the value of the rate field at $\gamma$, and
+\begin{equation}
+  \label{eq:z} 
+  z = \int R(\gamma|\av) d\gamma 
+\end{equation}
+is the integrated rate.  In principal, we can finish the task by
+selecting a prior $P(\av)$ for the density and solving for the maximum
+a posteriori probability (MAP) $\av$, ie,
+\begin{equation}
+  \label{eq:vhat}
+  \hat \av = \argmax_\av  \left( \loglike(\gamma_1^M,\av) +
+    \log(P(\av)) \right).
+\end{equation}
+
+Subsequent sections explain details of an implementation of the
+program indicated by \eqref{eq:vhat} and its application to
+both simulations and measured data.
+
+\section{Muon Flux and Interactions}
+\label{sec:model}
+
+We let $f(T,\gamma)$ denote the flux\footnote{At sea level, the total
+  flux of cosmic ray muons is about one per $(\text{cm})^2$ per
+  minute.} of muons at the earth's surface.  In this expression $T$ is
+the energy and $\gamma\equiv(x,y,\theta,\phi)$ describes an incident
+trajectory in terms of $(x,y)$ the intersection of the trajectory with
+a horizontal plane at elevation $h=0$, $\theta$, the angle between the
+path and a vertical line, and $\phi$ the angle between a vertical
+projection of the trajectory and the $x$ axis.  We assume that the flux
+factors into an amplitude $\tilde \alpha$ that depends on $\gamma$ and
+a shape $F$ that depends on energy as follows
+\begin{equation*}
+  \tilde \Phi(T,\gamma) = \tilde \alpha(\gamma) \int_T^\infty
+  f(\tau|\gamma) \equiv \tilde \alpha(\gamma) F(T).
+\end{equation*}
+The code that we have implemented can use either of the following forms
+for the shape:
+\begin{subequations}
+  \label{eq:F}
+  \begin{align}
+    \label{eq:expF}
+    & \text{exponential } & F(T) &=  e^{-\lambda T} \\
+    \label{eq:PLF}
+    & \text{power law } & F(T) &=
+    \begin{cases}
+      T^{1-\power} & T > 1.0 \\
+      1 &  T \leq 1.0
+    \end{cases}
+  \end{align}
+\end{subequations}
+
+We model absorption by assuming that energy loss rate per distance is a
+material property $\rho$ that does not depend on energy.  Since a ray
+with trajectory $\gamma$ is absorbed if the integrated energy loss
+along the trajectory exceeds the initial particle energy $T$, the
+detection probability is
+\begin{equation*}
+  d(\gamma,T) =
+  \begin{cases}
+    \beta(\gamma) & T > u_\gamma \\
+    0 & T \leq  u_\gamma,
+  \end{cases}
+\end{equation*}
+where $\beta(\gamma)$ is the detector efficiency.  We assume that a
+detector measures $\gamma$, both the position and angle, of muons that
+penetrate the probed material.  We also assume that each $\gamma$
+defines an entire trajectory, ie, that the material being probed slows
+the speed of a muon but does not perturb its direction of motion.  In
+summary, we write the detected particle flux in terms of the true
+particle flux by replacing $\tilde \alpha(\gamma)$ with
+$\alpha(\gamma)=\beta(\gamma)\tilde \alpha(\gamma)$, obtaining
+\begin{equation*}
+  \Phi(T,\gamma) = \beta(\gamma)\tilde\Phi(T,\gamma) =
+  \alpha(\gamma)F(T).
+\end{equation*}
+
+
+\section{Maps Between Densities, Integrals, and Rates}
+\label{sec:maps}
+
+We restrict the task to estimating the density profile in a volume $V$
+directly above the detector to a height $H$.  At that height we assume
+that $\tilde \alpha(\gamma)F(T)$ describes the muon flux.  For an
+incident muon with a trajectory defined by $\gamma =
+(x,y,\theta,\phi)$, the line integral of the density along the
+trajectory,
+\begin{equation}
+  \label{eq:u}
+  u(\gamma) = \int_{h:\xi(h) \in V} \rho(\xi(h))  \frac{d s}{d h} dh
+\end{equation}
+where
+\begin{align*}
+  \xi(h) &= \begin{bmatrix}
+    x + h \tan(\theta) \cos(\phi) \\
+    y + h \tan(\theta) \sin(\phi) \\
+    h
+  \end{bmatrix} \\
+  \frac{d s}{d h} &= \sqrt{1+(\tan(\theta))^2},
+\end{align*}
+combined with the detector efficiency $\beta(\gamma)$ determines the
+probability of detection.  The field of integrals
+\begin{equation*}
+  u = \Radon \rho
+\end{equation*}
+is the \emph{Radon transform} of the density function $\rho$.
+
+Combining the transformed field $u$ and an incident flux-efficiency
+function $\Phi$, defines a field of \emph{rates} $R(\gamma)$ that
+determines the probability of measuring a muon as a function of
+position, angle, and duration with the probability density of a
+detection at $\gamma_0$ given by
+\begin{equation*}
+  \lim_{\Delta \rightarrow 0} \frac{\text{Prob}(d=1|\gamma_0 \leq x
+    \leq \gamma_0 + \Delta \gamma,0 \leq t \leq \Delta t)}{ \Delta
+    \gamma \Delta t }.
+\end{equation*}
+Equivalently
+\begin{equation*}
+  R(\gamma) = \Phi(u(\gamma,\rho),\gamma)
+\end{equation*}
+where $\Phi$ maps the field of integrals $u$ to the field of rates
+$R$.
+
+To implement a numerical method, we choose a finite dimensional
+representation of possible density fields $\rho$ by using coefficients
+of a set of Gaussian basis functions with centers $\{\xi_k\}$ and
+widths $\sigma$, ie,
+\begin{align*}
+  \rho(\xi) &= \sum_k \av_k \psi_{k}(\xi) + \rho_0(\xi)\\
+  \psi_{k}(\xi) &= \left(2\pi \sigma^2\right)^{-\frac{3}{2}} \exp\left(
+    -\frac{\left| \xi - \xi_k \right|^2}{2\sigma^2} \right),
+\end{align*}
+where $\rho_0$ is the nominal density.  For a trajectory
+$\gamma=(x,y,\theta,\phi)$, the corresponding component of the Radon
+transform of the density is
+\begin{equation*}
+  u(\gamma) = \Radon(\gamma) \av
+\end{equation*}
+where $\Radon(\gamma)$ is a functional defined as follows
+\begin{align*}
+  \Radon(\gamma)\av &\equiv \sum_k \Radon(\gamma)_k \av_k + \int_0^H 
+  \rho_0\left( \xi(h) \right) \frac{ds}{dh} dh\\
+  \Radon(\gamma)_k &\equiv \int_0^H \psi_k \left( \xi(h) \right) \frac{ds}
+  {dh} dh,
+\end{align*}
+and $\xi$ and $\frac{ds} {dh}$ were defined for \eqref{eq:u}.  Note
+that the operator $\Phi$ is local in $\gamma$ and the value of the
+rate field at a trajectory $\gamma$ is
+\begin{equation*}
+  R(\gamma) =\Phi \left( \Radon(\gamma)\av, \gamma \right).
+\end{equation*}
+
+In summary, for a given vector of coefficients $\av$:
+\begin{align}
+  \rho(\xi) &= \sum_k \av_k \psi_{k}(\xi) \\
+  u(\gamma) &= \Radon(\gamma) \av \\
+  R(\gamma) &= \Phi (u(\gamma),\gamma) =
+  \alpha(\gamma)F(u(\gamma)).
+\end{align}
+
+\section{An Objective Function}
+\label{sec:LL}
+
+To implement the procedure suggested by Eqn.~\eqref{eq:vhat}, we have
+written code that implements the objective function (the log a
+posteriori probability) and its first two derivatives.  Following
+\eqref{eq:ihPoisson} we find that the log likelihood is
+\begin{equation*}
+  \loglike(\gamma_1^M, \av) = -tz + \sum_k \log \left( R(\gamma_k)
+  \right).
+\end{equation*}
+
+\subsection{Using Background Data}
+\label{sec:background}
+
+Rather than trying to do the integral required to evaluate $z$
+analytically, we estimate it using flat field or background data.
+The following sum using small volumes $A_i$ to cover the domain of
+$\gamma$ approximates the integral in \eqref{eq:z}
+\begin{equation*}
+  z(\av) \approx \sum_i \Phi(u(\gamma_i),\gamma_i) A_i.
+\end{equation*}
+To use Monte Carlo integration with importance sampling, one could
+take $N$ draws from an iid random process with probability $P_i$ of
+falling in $A_i$ and write
+\begin{equation*}
+   z(\av) \approx \sum_i \Phi(u(\gamma_i),\gamma_i)\frac{A_i}{P_i}
+   \frac{N_i}{N}.
+\end{equation*}
+If instead of having $N$ draws from an iid process, one had Poisson
+processes with parameter $\lambda_i$ for each volume $A_i$ one could
+use the approximation
+\begin{equation*}
+   z(\av) \approx \sum_i \Phi(u(\gamma_i),\gamma_i)\frac{A_i N_i}
+   {\lambda_i}.
+\end{equation*}
+Data taken over a time interval $t_b$ with a known background
+density\footnote{If $\rho_0$ completely describes the background
+  density, then $\av_b = 0$.}  $\av_b$ can provide the Poisson
+processes.  In the limit of small volumes
+\begin{align*}
+  \lim_{A_i\rightarrow 0} \frac{A_i}{\lambda_i} =
+  \frac{1}{t_b \Phi(\Radon(\gamma_i)\av_b,\gamma_i)},
+\end{align*}
+where we have written the Radon transform of the background density as
+$\Radon(\gamma_i)\av_b$.  Substitution yields
+\begin{equation*}
+  \hat z(\av) = \sum_j \frac{\Phi(\Radon(\gamma_j)\av,\gamma_j)}
+  {t_b\Phi(\Radon(\gamma_j)\av_b,\gamma_j)}
+\end{equation*}
+as an estimate of $z$.  If $\Phi$ factors into an amplitude $\alpha$
+and shape $F$, the amplitudes cancel and
+\begin{equation}
+  \label{eq:zhat}
+  \hat z(\av) = \frac{1}{t_b}\sum_j \frac{F(\Radon(\gamma_j)\av)}
+  {F(\Radon(\gamma_j)\av_b)}.  
+\end{equation}
+Using \eqref{eq:zhat} yields the following approximation for the
+log likelihood
+\begin{align*}
+  &-\frac{t}{t_b}\sum_j \frac{F(\Radon(\gamma_j)\av)}
+  {F(\Radon(\gamma_j)\av_b)} + \sum_k \log(F(\Radon(\gamma_k)\av)) \\
+  &\quad + \sum_k \log(\alpha(\gamma_k)).
+\end{align*}
+Since the last term is independent of $\av$, henceforth we simply
+use
+\begin{align}
+  \loglike(\gamma_1^M,\av|{\tilde y}_1^N,\av_b) & + C \approx \sum_{k=1}^M
+  \log(F(\Radon(\gamma_k)\av)) \nonumber \\
+  \label{eq:LL}
+  & -\frac{t}{t_b}\sum_{j=1}^N \frac{F(\Radon(\gamma_j)\av)}
+  {F(\Radon(\gamma_j)\av_b)},
+\end{align}
+where $j$ indexes the background data $\tilde \gamma_1^N$, $k$
+indexes the target data $\gamma_1^M$ and $C$ is a constant that I
+henceforth ignore.
+
+\subsection{Regularization}
+\label{sec:regularization}
+
+While one could use \eqref{eq:LL} to search for a maximum likelihood
+estimate of the coefficient vector $\av$, we subtract an approximate
+\emph{total variation} term
+\begin{equation*}
+  T(\av) = \alpha \sqrt{\av^T D \av + \beta}
+\end{equation*}
+from the log likelihood.  We design $D$ so that $\av^T D \av$
+approximates the total squared variation, ie, $\av^T D \av = \av^T
+\tilde D^T \tilde D \av$, where $\tilde D$ approximates the gradient.
+Thus $D \equiv \tilde D^T \tilde D$ is positive semidefinite by
+construction.  Such regularization is equivalent to imposing a prior
+$P(\av) \propto e^{-T(\av)}$ and then solving for the maximum a
+posteriori probability $\av$.  The derivatives of $T$ are
+\begin{align*}
+  T'(\av) &= \alpha^2 \frac{\av^TD}{T(\av)} \\
+  T''(\av) &= \alpha^2 \frac{T(\av)D - D\av T'(\av)}{(T(\av))^2} \\
+  &= \alpha^2 \frac{(T(\av))^2D - \alpha^2D\av \av^T D}{(T(\av))^3}.
+\end{align*}
+Using the Cauchy Schwarz inequality, one can show that for any vector
+$w$, $w^T(T'')w \geq \beta > 0$.  Thus the second derivative $T''$ is
+positive definite.
+
+\subsection{Derivatives}
+\label{sec:derivatives}
+
+Dropping constants, the log a posteriori probability and its first two
+derivatives with respect to $\av$ are
+\begin{align}
+  \label{eq:LAP}
+  \logAP &= \sum_{k=1}^M \log(F(u_k))
+  -\sum_{j=1}^N \frac{t}{t_b} \frac{F(u_j)}
+  {F(\Radon_j\av_b)} - T(\av) \\
+  \label{eq:D1LAP}
+  \logAP' &= \sum_k \frac{F'(u_k)}{F(u_k)}\Radon_k -\sum_j\frac{t}{t_b}
+  \frac{F'(u_j)}{F(\Radon_j \av_b)} \Radon_j - T'(\av) \\
+  \logAP'' &= \sum_k \Radon_k^T \frac{F(u_k)F''(u_k)-(F'(u_k))^2}
+  {(F(u_k))^2} \Radon_k \nonumber \\
+  \label{eq:D2LAP}
+  &\quad -\sum_j\frac{t}{t_b} \Radon_j^T \frac{F''(u_j)}{F(\Radon_j
+    \av_b)} \Radon_j - T''(\av),
+\end{align}
+where I've used the abbreviations $\Radon_i \equiv \Radon(\gamma_i)$
+and $u_i \equiv \Radon_i \av$.
+
+If $\av = \av_b$ then
+\begin{equation*}
+   \sum_k \Radon_k^T \frac{F''(u_k)} {F(u_k)} \Radon_k \approx
+   \frac{t}{t_b}\sum_j \Radon_j^T \frac{F''(u_j)}{F(\Radon_j \av_b)}
+   \Radon_j
+\end{equation*}
+and
+\begin{equation*}
+  \logAP'' \approx \sum_k \Radon_k^T \frac{-(F'(u_k))^2} {(F(u_k))^2} \Radon_k -
+  T''(\av)
+\end{equation*}
+which is negative definite.  Thus we expect $\logAP''$ to be negative
+definite over a set of $\av$ values in a neighborhood of $\av_b$, and
+in that set, $\logAP$ is concave and has a single local/global
+maximum.  With effective algorithms to evaluate the expressions for
+$\logAP$, $\logAP'$, and $\logAP''$, one can use one of many different
+optimization algorithms to find the value $\hat \av $ that maximizes
+$\logAP((\gamma_1^M,\av)$.
+
+\section{Simulation}
+\label{sec:simulation}
+
+Figure~\ref{fig:sim1} illustrates the result of applying the
+optimization suggested by Eqn.~\eqref{eq:vhat} to simulated muon
+measurements.  We used the python/scipy/optimize/fmin\_ncg\cite{scipy}
+function that implements the Newton conjugate gradient
+algorithm.  This section describes the simulation and the details of
+my implementation\footnote{Code that produced the figures in this
+  paper is available at FixMe.}.
+
+\marginpar{Estimate variance}
+\begin{figure*}
+  \centering 
+  \resizebox{0.32\textwidth}{!}{\input sim1true.pdf_t } 
+  \resizebox{0.32\textwidth}{!}{\input sim1hat.pdf_t }
+  \resizebox{0.32\textwidth}{!}{\input sim2hat.pdf_t }  
+  \caption{Reconstruction of a density profile from simulated muon shadows.}
+  \label{fig:sim1}
+\end{figure*}
+
+The detector is a rectangle with dimensions $D_x$, $D_y$ located in
+the $h=0$ plane.  The centers of the basis functions are arranged in a
+\emph{hexagonal close packed} pattern\footnote{See
+  http://en.wikipedia.org/wiki/Close-packing} inside a rectangular box
+centered above the detector that has dimensions $D_x$, $D_y$, $D_h$.
+The distance from the bottom face of the box to the detector is $h_0$.
+The minimum center to center spacing for the basis functions is $d_0$,
+and the width of the basis function is $\sigma = \frac{d_0}{2}$.  We
+truncate the basis functions for distances beyond
+$\left|x-\xi_k\right| > \sqrt{3.5}\sigma$.  The nominal density is
+zero everywhere except for a unit density slab between the elevations
+$h_0$ and $h_0+D_h$.  Thus at $\gamma_j \equiv
+(x_j,y_j,\theta_j,\phi_j)$ the value of the Radon transform of the
+nominal density is
+\begin{equation*}
+  \Radon_j \av_b = \frac{D_h}{\cos(\theta_j)}.
+\end{equation*}
+The target density differs from the nominal density in a spherical
+region of radius $r_s$ centered at $(x_s,x_y,x_z)$.  In that sphere,
+the density is $1+\Delta_\rho$.
+
+\subsection{Total Variation}
+\label{sec:Variation}
+
+We build the matrix $D$ by adding a $4 \times 4$ block that is
+approximately proportional to the squared gradient at the center of
+each unit tetrahedron in the lattice of basis functions.  The vertices
+of a unit tetrahedron are the centers of 4 basis functions.  If the
+coefficients of those basis functions are $(v_a,v_b,v_c,v_d)$ then
+the contribution of that tetrahedron to the quadratic form is
+\begin{equation*}
+  \begin{bmatrix} v_a&v_b&v_c&v_d \end{bmatrix} D 
+  \begin{bmatrix} v_a \\ v_b \\ v_c \\ v_d \end{bmatrix}  
+\end{equation*}
+where\footnote{See http://en.wikipedia.org/wiki/Tetrahedron for an
+  explanation of $\tilde D$.}
+\begin{align*} \\
+  D &= \tilde D^T \tilde D \\
+  \tilde D &=
+  \begin{bmatrix}
+    1 & -1& -1& 1 \\
+    1 & 1-& 1 & -1 \\
+    1 & 1 & -1& -1
+  \end{bmatrix}\\
+  D &=
+  \begin{bmatrix}
+    3 & -1 & -1 & -1 \\ -1 & 3 & -1 & -1 \\ -1 & -1 & 3 & -1 \\
+    -1 & -1 & -1 & 3
+  \end{bmatrix}.
+\end{align*}
+
+\subsection{Caching $\Radon_k$ Vectors on Disk}
+\label{sec:cache}
+
+So that the code can handle millions of detected particles, for each
+detection, $\gamma_k$, we store $\Radon_k$ on disk.  Since the fraction
+of nonzero entries in $\Radon_k$ is of order\footnote{The following
+  calculations suggest that number of nonzero entries in $\Radon_k$ is
+  about $\frac{s}{2d_0}$ where $s$ is the length of the trajectory
+  though the test volume and $\sigma=\frac{1}{2}$ is the range of the
+  basis functions as a fraction of $d_0$.
+  \begin{align*}
+    &\text{volume of cylinder} && s \pi 3.5 (d_0)^2 \sigma^2 \\
+    &\text{sphere packing fraction} && \frac{\pi}{3\sqrt{2}} \\
+    &\text{volume of sphere} && \frac{4\pi (d_0)^3}{3} \\
+    &\text{volume per center} && 4\sqrt{2}(d_0)^3 \\
+    &\text{number of centers in cylinder} && \frac{s}{d_0} \frac{3.5
+      \pi \sigma^2}{4\sqrt{2}} \approx 0.496 \frac{s}{d_0}
+  \end{align*}
+}
+$\frac{(d_0)^2\sigma^2}
+{D_xD_y}$, we use a sparse format to represent each $\Radon_k$.  For
+each $k$, we write the following data sequence on disk:
+\begin{description}
+\item[$n$] The number of indices that follow (also the number of values)
+\item[$i_1^n$] The $n$ integers that identify the components of
+  $\av$ associated with the values to follow
+\item[$r_1^n$] The $n$ nonzero entries in $\Radon_k$
+\item[$\theta_k$] The azimuthal angle
+\item[$n_k$] The number of hits with trajectory parameters
+  $\gamma_k$.  Although in true list mode $n_k = 1$, for efficiency, I
+  may finely quantize the trajectory measurements.
+\end{description}
+As we calculate $\Radon_k$ and append the above data to a disk file, I
+keep track of the maximum value of $n$ so that we can allocate and
+reuse memory for a sparse matrix of that size to do subsequent
+calculations.
+
+\subsection{Estimating the Variance}
+\label{sec:variance}
+
+The a posteriori distribution of the density is approximately the
+Gaussian $\normal{\hat \av}{\hat \Sigma}$ with
+\begin{equation*}
+  \hat \Sigma^{-1} = \logAP''.
+\end{equation*}
+Even if the problem size makes inverting $\hat \Sigma^{-1}$ difficult, one
+may extract elements of $\hat \Sigma$ to characterize the uncertainty of
+the density estimate as follows.  Note that
+\begin{equation*}
+  \left( \hat \Sigma \right)_{i,j} = w_i^T \hat \Sigma w_j
+\end{equation*}
+where $w_i$ and $w_j$ are unit vectors.  If $x = \hat \Sigma w_j$, then
+$x$ solves
+\begin{equation*}
+  \hat \Sigma^{-1} x = w_j.
+\end{equation*}
+Since we can operate with $\hat \Sigma^{-1}$ without even forming the
+whole matrix, we can use a conjugate gradient method to solve for $x$
+and the calculate
+\begin{equation*}
+  \left( \hat \Sigma \right)_{i,j} = w_i^T  x.
+\end{equation*}
+
+\section{Physical Example}
+\label{sec:physical}
+
+Figure~\ref{fig:exp1} is a slice of a density profile estimated from
+data taken with the LANL LUIS detector.  This section describes that
+detector, the data\footnote{The data consist of 4 files in \emph{root}
+  format.  Since each file is about 21 Gigabytes the total exceeds the
+  limit for inclusion in the supplementary material.  However, we do
+  make it available at FixMe.}, and the modifications that we made to
+the simulation code before applying it to the data.
+
+\begin{figure}
+  \centering
+  \includegraphics[angle=-90,width=0.4\textwidth]{LUISbricks_5.jpg}
+  \resizebox{0.48\textwidth}{!}{\input exp1hat.pdf_t }  
+  \caption{Density profile reconstructed from measured muon shadows.}
+  \label{fig:exp1}
+\end{figure}
+
+Andrew Green's data come in segments that were measured with the
+instrument at different positions.  We'll use the following notation to
+describe that data and the algorithms we apply to it:
+\begin{description}
+\item[$I$] Index of segment
+\item[$k$] Index of a single muon measurement
+\item[$K_I$] The set of measurements in segment $I$
+\item[$I(k)$] The segment that $k$ is in, ie,  $I(k) = I:k\in K_I$
+\item[$t_I$] The duration of segment $I$
+\item[$t_k = t_{I(k)}$] The duration of the segment of which $k$ is a member
+\item[$t_{b(k)} = \sum_{I\neq I(k)} t_I$] The duration of the back
+  ground data for $k$
+\item[${\cal J} = \{(I,k):I\neq I(k)\}$] The set of all segment
+  trajectory pairs excluding the paring of any trajectory with the
+  segment of which it is a member
+\item[$\Gamma_I$] Trajectory offset for segment $I$
+\item[$\gamma_k$] Trajectory of measurement $k$ in the instrument frame
+\item[$\Radon_\gamma$] Radon vector for trajectory $\gamma$
+\item[$\tilde u_{I,k}$] The $u$ field at $\gamma = \Gamma_I +
+  \gamma_k$ for the empty or background density
+\item[$u_{I,k}= \Radon_{\Gamma_I + \gamma_k} \av + \tilde u_{I,k}$]
+  The scalar value of $u(\av)$ at $\gamma = \Gamma_I + \gamma_k$
+\end{description}
+
+The generalization of the likelihood for multiple segments is
+\begin{equation*}
+  \like(\gamma_1^M|R) = \prod_I e^{-\z_I t_I} \prod_{k \in K_I}  t_I R(u_{I,k}).
+\end{equation*}
+For each segment $I$, using data from other segments as background to
+estimate $z$ leads to the following approximation for the log likelihood
+\begin{equation*}
+  \small L = \sum_I \left[ \sum_{k\in K_I} \log \left( t_I F(u_{I,k})
+    \right) - \sum_{J\neq I} \sum_{k\in K_J} \frac {t_I}{t_{b(k)}}
+    \frac{F(u_{I,k})}{F(\tilde u_{I,k})} \right]
+\end{equation*}
+or equivalently
+\begin{equation}
+  \label{eq:PELL}
+  L = \sum_k \log(t_k F(u_{I(k),k})) - \sum_{(I,k) \in {\cal J}} \frac{t_{I}}{t_{b(k)}}
+  \frac{F(u_{I,k})}{F(\tilde u_{I,k})}.
+\end{equation}
+Since the two terms in Eqn.~\eqref{eq:PELL} have the same form as the
+first two terms of Eqn.~\eqref{eq:LAP}, we can use the same code to
+solve the optimization problem by first calculating the offset
+trajectories $\Gamma_I+\gamma_k$ and caching the corresponding Radon
+functionals $\Radon_{\Gamma_I+\gamma_k}$.
+
+\section{To Do}
+\label{sec:todo}
+
+\begin{enumerate}
+\item Describe binning of experimental data
+\item Acknowledge Schwitters and UT
+\item I don't know the meaning of the scale of my estimated density
+  for the real data
+\end{enumerate}
+\bibliographystyle{plain}
+\bibliography{small}
+
+\end{document}
+
+
+%%% Local Variables:
+%%% eval: (TeX-PDF-mode)
+%%% End:
